@@ -13,7 +13,7 @@ This script analyzes web server logs to extract meaningful insights. It performs
    - Highlight IP addresses with more than 5 failed requests as potential security risks.
 
 3. **Output Results**:
-   - Display a detailed report in the terminal (Top 10 IPs).
+   - Display a detailed report in the terminal.
    - Save results in a CSV file named `security_report.csv`.
 
 ---
