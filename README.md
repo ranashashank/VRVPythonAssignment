@@ -14,7 +14,7 @@ This script analyzes web server logs to extract meaningful insights. It performs
 
 3. **Output Results**:
    - Display a detailed report in the terminal (Top 10 IPs).
-   - Save results in a CSV file named `ip_request_analysis.csv`.
+   - Save results in a CSV file named `security_report.csv`.
 
 ---
 
@@ -38,10 +38,10 @@ Example:
 
 ### **File Structure**
 ```
-├── ip_analysis.py      # Main Python script for analysis
-├── sample.log          # Sample log file to analyze
-├── ip_request_analysis.csv  # Generated results (output)
-└── README.md           # Documentation
+├── vrv_log_analysis.py  # Main Python script
+├── sample.log           # Sample log file for analysis
+├── security_report.csv  # Generated report (output)
+└── README.md            # Documentation
 ```
 
 
@@ -58,11 +58,11 @@ Example:
    ```
 2. Run the script:
    ```bash
-   python ip_analysis.py
+   python log_analysis.py
    ```
 3. Check the output:
    - View a detailed report in the terminal.
-   - Open the `ip_request_analysis.csv` file for the saved results.
+   - Open the `security_report.csv` file for the saved results.
 
 ---
 
@@ -70,37 +70,22 @@ Example:
 
 ### **Terminal Output**
 ```bash
-=== Comprehensive IP Request Analysis ===
+=== 🔒 VRV Security Log Analysis Report 🔒 ===
 
-IP: 203.0.113.5
-  Total Requests:      8
-  Successful Requests: 0
-  Failed Requests:     8
-  Success Rate:        0.0%
-  POTENTIAL SECURITY RISK
+📍 Top IP Addresses by Request Volume:
+  203.0.113.5: 8 requests
+  198.51.100.23: 8 requests
+  192.168.1.1: 7 requests
+  10.0.0.2: 6 requests
+  192.168.1.100: 5 requests
 
-IP: 198.51.100.23
-  Total Requests:      8
-  Successful Requests: 8
-  Failed Requests:     0
-  Success Rate:        100.0%
+🌐 Most Accessed Endpoints:
+  /login: 13 visits
+  /home: 5 visits
+  /about: 5 visits
 
-IP: 192.168.1.1
-  Total Requests:      7
-  Successful Requests: 7
-  Failed Requests:     0
-  Success Rate:        100.0%
+🚨 Suspicious Login Attempts:
+  ALERT: 203.0.113.5 - 8 failed login attempts
 
-IP: 10.0.0.2
-  Total Requests:      6
-  Successful Requests: 6
-  Failed Requests:     0
-  Success Rate:        100.0%
-
-IP: 192.168.1.100
-  Total Requests:      5
-  Successful Requests: 0
-  Failed Requests:     5
-  Success Rate:        0.0%
-Detailed IP analysis saved to ip_request_analysis.csv
+💾 Detailed report saved to security_report.csv
 ```
