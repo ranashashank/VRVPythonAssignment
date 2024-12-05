@@ -1,0 +1,17 @@
+Top IP Addresses
+IP,Request Count
+203.0.113.5,8
+198.51.100.23,8
+192.168.1.1,7
+10.0.0.2,6
+192.168.1.100,5
+
+Top Endpoints
+Endpoint,Visits
+/login,13
+/home,5
+/about,5
+
+Suspicious Login Attempts
+IP,Failed Attempts
+203.0.113.5,8

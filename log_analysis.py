@@ -1,127 +1,127 @@
 import re
-from collections import Counter
 import csv
+from collections import Counter
+from datetime import datetime
 
-def analyze_ip_requests(log_file_path):
+def analyze_log_file(file_path):
     """
-    Analyze IP addresses and their request patterns with detailed categorization.
+    Analyze log file and extract key security insights.
     """
-    # Counters for different IP request types
-    total_ip_requests = Counter()
-    successful_requests = Counter()
-    failed_requests = Counter()
-    
-    # IP categorization
-    unique_ips = set()
-    
-    try:
-        with open(log_file_path, 'r') as file:
-            for line in file:
-                # Extract IP address
-                ip_match = re.search(r'(\d+\.\d+\.\d+\.\d+)', line)
-                if not ip_match:
-                    continue
-                
-                ip = ip_match.group(1)
-                unique_ips.add(ip)
-                
-                # Count total requests for each IP
-                total_ip_requests[ip] += 1
-                
-                # Categorize requests by status
-                if ' 200 ' in line:
-                    successful_requests[ip] += 1
-                elif ' 401 ' in line:
-                    failed_requests[ip] += 1
-    
-    except FileNotFoundError:
-        print(f"Error: Log file {log_file_path} not found.")
-        return None
-    
-    # Prepare comprehensive IP analysis
-    ip_analysis = []
-    for ip in unique_ips:
-        ip_analysis.append({
-            'ip_address': ip,
-            'total_requests': total_ip_requests[ip],
-            'successful_requests': successful_requests[ip],
-            'failed_requests': failed_requests[ip],
-            'success_rate': round(successful_requests[ip] / total_ip_requests[ip] * 100, 2) if total_ip_requests[ip] > 0 else 0
-        })
-    
-    # Sort by total requests in descending order
-    ip_analysis.sort(key=lambda x: x['total_requests'], reverse=True)
-    
-    return ip_analysis
+    # Log parsing with detailed information extraction
+    log_entries = []
+    ip_requests = Counter()
+    endpoint_visits = Counter()
+    login_attempts = {}
 
-def generate_ip_report(ip_analysis):
+    # Read and process log file
+    with open(file_path, 'r') as file:
+        for line in file:
+            # Enhanced log parsing
+            match = re.search(
+                r'(?P<ip>\d+\.\d+\.\d+\.\d+).*"(?P<method>\w+) (?P<endpoint>\S+).*" (?P<status>\d+).*',
+                line
+            )
+            
+            if match:
+                ip = match.group('ip')
+                endpoint = match.group('endpoint')
+                status = int(match.group('status'))
+                
+                # Track IP requests
+                ip_requests[ip] += 1
+                
+                # Track endpoint visits
+                endpoint_visits[endpoint] += 1
+                
+                # Track failed login attempts
+                if status == 401 and '/login' in endpoint:
+                    login_attempts[ip] = login_attempts.get(ip, 0) + 1
+
+    # Identify suspicious activities
+    suspicious_ips = {
+        ip: attempts 
+        for ip, attempts in login_attempts.items() 
+        if attempts > 5  # Configurable threshold
+    }
+
+    # Prepare comprehensive report
+    report = {
+        'top_ips': ip_requests.most_common(5),
+        'top_endpoints': endpoint_visits.most_common(3),
+        'suspicious_ips': suspicious_ips
+    }
+
+    return report
+
+def generate_security_report(report):
     """
-    Generate a detailed report of IP request analysis.
+    Generate a human-readable security report.
     """
-    print("\n=== Comprehensive IP Request Analysis ===")
+    print("\n=== 🔒 VRV Security Log Analysis Report 🔒 ===")
     
-    for entry in ip_analysis[:10]:  # Top 10 IPs
-        print(f"\nIP: {entry['ip_address']}")
-        print(f"  Total Requests:      {entry['total_requests']}")
-        print(f"  Successful Requests: {entry['successful_requests']}")
-        print(f"  Failed Requests:     {entry['failed_requests']}")
-        print(f"  Success Rate:        {entry['success_rate']}%")
+    # Top IP Addresses
+    print("\n📍 Top IP Addresses by Request Volume:")
+    for ip, count in report['top_ips']:
+        print(f"  {ip}: {count} requests")
+    
+    # Most Visited Endpoints
+    print("\n🌐 Most Accessed Endpoints:")
+    for endpoint, visits in report['top_endpoints']:
+        print(f"  {endpoint}: {visits} visits")
+    
+    # Suspicious Activity Detection
+    print("\n🚨 Suspicious Login Attempts:")
+    if report['suspicious_ips']:
+        for ip, attempts in report['suspicious_ips'].items():
+            print(f"  ALERT: {ip} - {attempts} failed login attempts")
+    else:
+        print("  No suspicious activities detected.")
+
+def save_report_to_csv(report, filename='security_report.csv'):
+    """
+    Save analysis results to a CSV file.
+    """
+    with open(filename, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
         
-        # Risk classification
-        if entry['failed_requests'] > 5:
-            print("  POTENTIAL SECURITY RISK")
-
-def save_ip_analysis_to_csv(ip_analysis, filename='ip_request_analysis.csv'):
-    """
-    Save IP analysis to a CSV file with detailed breakdown.
-    """
-    try:
-        with open(filename, 'w', newline='') as csvfile:
-            # Define CSV headers
-            fieldnames = [
-                'IP Address', 
-                'Total Requests', 
-                'Successful Requests', 
-                'Failed Requests', 
-                'Success Rate (%)'
-            ]
-            
-            # Create CSV writer
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            
-            # Write headers
-            writer.writeheader()
-            
-            # Write IP data
-            for entry in ip_analysis:
-                writer.writerow({
-                    'IP Address': entry['ip_address'],
-                    'Total Requests': entry['total_requests'],
-                    'Successful Requests': entry['successful_requests'],
-                    'Failed Requests': entry['failed_requests'],
-                    'Success Rate (%)': entry['success_rate']
-                })
+        # IP Requests Section
+        writer.writerow(['Top IP Addresses'])
+        writer.writerow(['IP', 'Request Count'])
+        writer.writerows(report['top_ips'])
         
-        print(f"\nDetailed IP analysis saved to {filename}")
+        # Endpoint Visits Section
+        writer.writerow([])
+        writer.writerow(['Top Endpoints'])
+        writer.writerow(['Endpoint', 'Visits'])
+        writer.writerows(report['top_endpoints'])
+        
+        # Suspicious IPs Section
+        writer.writerow([])
+        writer.writerow(['Suspicious Login Attempts'])
+        writer.writerow(['IP', 'Failed Attempts'])
+        writer.writerows(report['suspicious_ips'].items())
     
-    except IOError:
-        print("Error: Unable to write CSV file.")
+    print(f"\n💾 Detailed report saved to {filename}")
 
 def main():
     """
-    Main execution function for IP request analysis.
+    Main execution function for log analysis.
     """
-    log_file = 'sample.log'
-    
-    # Analyze IP requests
-    ip_analysis = analyze_ip_requests(log_file)
-    
-    if ip_analysis:
-        # Generate console report
-        generate_ip_report(ip_analysis)
+    try:
+        # Analyze log file
+        log_file = 'sample.log'
+        security_report = analyze_log_file(log_file)
+        
+        # Display report
+        generate_security_report(security_report)
         
         # Save to CSV
-        save_ip_analysis_to_csv(ip_analysis)
+        save_report_to_csv(security_report)
+    
+    except FileNotFoundError:
+        print(f"Error: Log file '{log_file}' not found.")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
 
 if __name__ == '__main__':
     main()
